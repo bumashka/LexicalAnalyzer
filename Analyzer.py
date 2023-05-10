@@ -1,3 +1,4 @@
+import re
 import string
 
 from prettytable import PrettyTable
@@ -31,6 +32,8 @@ class Analyzer:
         self.dividers = "();><=: \t\n%"
         self.operators = "();><="
         self.keywords = ['for', 'do']
+        self.reg_for_num = "[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+        self.reg_for_id = "[A-Za-z_]{1,16}"
         self.ident_alph = string.ascii_letters + string.digits + "_"
         self.num_alph = string.digits + "." + "+" + "-" + "e" + "E"
         self.delta = [
@@ -41,13 +44,13 @@ class Analyzer:
             {"=": 5},
             {self.ident_alph.join(self.num_alph) + " \t\n%": 0},
             {self.ident_alph.join(self.num_alph) + " \t\n%": 0},
-            {"\n": 0, string.ascii_letters + string.digits + string.punctuation: 6}
+            {"\n": 0, string.ascii_letters + string.digits + string.punctuation + "_ ": 6}
         ]
         for i in range(len(self.delta)):
             self.states.append(State(i, self.names[i], self.delta[i]))
 
-    def add_lexeme_to_table(self, name, value, type):
-        self.table.add_row([name, type, value])
+    def add_lexeme_to_table(self, name, value, type_):
+        self.table.add_row([name, type_, value])
 
     def get_value(self, current_state, oper):
         value = ""
@@ -71,6 +74,14 @@ class Analyzer:
     def print_table(self):
         print(self.table)
 
+    def check_the_pattern(self, current_state, oper):
+        if current_state == 1:
+            return re.match(self.reg_for_id, oper)
+        elif current_state == 2:
+            return re.match(self.reg_for_num, oper)
+        else:
+            return True
+
     def analyze(self, path):
         current_state = 0
         file = open(path, 'r')
@@ -86,13 +97,16 @@ class Analyzer:
                 elif next_state == current_state:
                     oper += c
                 else:
-                    if len(oper) > 16:
+                    if len(oper) > 16 and current_state != 6:
                         print("The " + oper.casefold() + " is too long!")
                         print("Error occurred on line: " + line)
                         return
                     if next_state == 0:
-                        self.add_lexeme_to_table(oper, self.get_value(current_state, oper),
-                                                 self.states[current_state].name)
+                        if self.check_the_pattern(current_state, oper):
+                            self.add_lexeme_to_table(oper, self.get_value(current_state, oper),
+                                                     self.states[current_state].name)
+                        else:
+                            print("The symbol " + oper + " cannot be added to the table!")
                         current_state = self.states[next_state].get_next_state(c)
                         if current_state == -1:
                             print("Error occurred on line: " + line + "Maybe you used the forbidden symbol!")

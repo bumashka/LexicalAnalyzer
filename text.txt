@@ -1,4 +1,7 @@
 for(i:=0; i<10; i:=1)do
 fg:=i = 10;
+%kunubulukudisio920_ = 0
 return:= fg > 10;
+return:= 1.38e-23
+return:= -2.71
 %Comment
