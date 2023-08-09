@@ -32,8 +32,8 @@ class Analyzer:
         self.dividers = "();><=: \t\n%"
         self.operators = "();><="
         self.keywords = ['for', 'do']
-        self.reg_for_num = "[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
-        self.reg_for_id = "[A-Za-z_]{1,16}"
+        self.reg_for_num = r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?'
+        self.reg_for_id = r'[A-Za-z0-9_]{1,16}'
         self.ident_alph = string.ascii_letters + string.digits + "_"
         self.num_alph = string.digits + "." + "+" + "-" + "e" + "E"
         self.delta = [
@@ -76,9 +76,9 @@ class Analyzer:
 
     def check_the_pattern(self, current_state, oper):
         if current_state == 1:
-            return re.match(self.reg_for_id, oper)
+            return re.fullmatch(self.reg_for_id, oper)
         elif current_state == 2:
-            return re.match(self.reg_for_num, oper)
+            return re.fullmatch(self.reg_for_num, oper)
         else:
             return True
 
